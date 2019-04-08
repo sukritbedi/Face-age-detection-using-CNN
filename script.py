@@ -134,7 +134,7 @@ age_model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.Ad
 checkpointer = keras.callbacks.ModelCheckpoint(filepath='age_model.hdf5', monitor = "val_loss", verbose=1, save_best_only=True, mode = 'auto')
  
 scores = []
-epochs = 250; batch_size = 128
+epochs = 50; batch_size = 128
  
 for i in range(epochs):
        print("epoch ",i)
