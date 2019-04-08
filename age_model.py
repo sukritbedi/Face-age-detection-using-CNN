@@ -52,26 +52,15 @@ df = df[df['age'] <= 100]
 df = df[df['age'] > 0]
 
 target_size = (224, 224)
+print(len(df))
+
 
  
 df['pixels'] = df['full_path'].apply(getImagePixels)
 
-classes = 101 #0 to 100
-target = df['age'].values
-target_classes = keras.utils.to_categorical(target, classes)
- 
-features = []
- 
-for i in range(0, df.shape[0]):
-       features.append(df['pixels'].values[i])
-
-from sklearn.model_selection import train_test_split
-train_x, test_x, train_y, test_y = train_test_split(features, target_classes, test_size=0.30)
-
-features = np.array(features)
-features = features.reshape(features.shape[0], 224, 224, 3)
-
 #Design of the neural network VGG Model
+
+
 model = keras.models.Sequential()
 model.add(keras.layers.ZeroPadding2D((1,1),input_shape=(224,224, 3)))
 model.add(keras.layers.Convolution2D(64, (3, 3), activation='relu'))
@@ -117,30 +106,30 @@ model.add(keras.layers.Convolution2D(2622, (1, 1)))
 model.add(keras.layers.Flatten())
 model.add(keras.layers.Activation('softmax'))
 
-model.load_weights('vgg_face_weights.h5')
-
-for layer in model.layers[:-7]:
-       layer.trainable = False
  
 base_model_output = keras.models.Sequential()
 base_model_output = keras.layers.Convolution2D(101, (1, 1), name='predictions')(model.layers[-4].output)
 base_model_output = keras.layers.Flatten()(base_model_output)
 base_model_output = keras.layers.Activation('softmax')(base_model_output)
  
-age_model = keras.models.Model(inputs=model.input, outputs=base_model_output)
+age_model = Model(inputs=model.input, outputs=base_model_output)
 
 age_model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
  
-checkpointer = keras.callbacks.ModelCheckpoint(filepath='age_model.hdf5', monitor = "val_loss", verbose=1, save_best_only=True, mode = 'auto')
+checkpointer = ModelCheckpoint(filepath='age_model.hdf5', monitor = "val_loss", verbose=1, save_best_only=True, mode = 'auto')
  
 scores = []
-epochs = 250; batch_size = 128
+epochs = 250; batch_size = 256
  
 for i in range(epochs):
        print("epoch ",i)
-       ix_train = np.random.choice(train_x.shape[0], size=batch_size)
-       score = age_model.fit(train_x[ix_train], train_y[ix_train], epochs=1, validation_data=(test_x, test_y), callbacks=[checkpointer])
-       scores.append(score)
+ 
+ix_train = np.random.choice(train_x.shape[0], size=batch_size)
+ 
+score = age_model.fit(train_x[ix_train], train_y[ix_train], epochs=1, validation_data=(test_x, test_y), callbacks=[checkpointer])
+
+'''
+scores.append(score)
 
 
 age_model.evaluate(test_x, test_y, verbose=1)
@@ -162,7 +151,6 @@ for i in range(0 ,apparent_predictions.shape[0]):
         
        mae = mae / apparent_predictions.shape[0]
  
-print("Mae: ",mae)
-print("Instances: ",apparent_predictions.shape[0])
-
-age_model.save('age_model1.h5')
+print("mae: ",mae)
+print("instances: ",apparent_predictions.shape[0])
+'''
